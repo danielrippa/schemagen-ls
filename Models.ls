@@ -3,10 +3,9 @@
 
     { read-textfile } = dependency 'os.filesystem.TextFile'
     { string-as-lines } = dependency 'unsafe.Text'
-    { drop-array-items: drop, array-concat: concat } = dependency 'unsafe.Array'
+    { drop-array-items: drop, array-size, append-items: append } = dependency 'unsafe.Array'
     { trimmed-string } = dependency 'unsafe.Whitespace'
     { upper-case } = dependency 'unsafe.StringCase'
-    { array-size, array-concat } = dependency 'unsafe.Array'
     { drop-last-string-chars, string-as-words } = dependency 'unsafe.String'
     { file-exists } = dependency 'os.filesystem.File'
     { result-or-error } = dependency 'flow.Conditional'
@@ -31,6 +30,8 @@
     textfile-lines = (filepath) -> filepath |> modelfile-found |> read-textfile |> string-as-lines |> drop _ , is-empty-line
 
     new-entity = (name) -> { name, pk: void, unique: [], fk: [], attributes: [] }
+
+    new-relationship = (source-entity, source-field, target-entity, target-field) -> { source-entity, source-field, target-entity, target-field }
 
     attribute-from-words = (words, line, index) ->
 
@@ -79,7 +80,9 @@
             entities.push entity  \
               if entity isnt void
 
-            entity = new-entity words.1
+            entity-name = words.1
+
+            entity = new-entity entity-name
 
           | 'PK' =>
 
@@ -108,7 +111,9 @@
 
             entity.fk.push name
 
-            relationships.push "#{ entity.name }::#{ name } -- #foreign-entity-name::#foreign-field-name"
+            relationship = new-relationship entity.name, name, foreign-entity-name, foreign-fielf-name
+
+            relationships.push relationship
 
           | 'U' =>
 
@@ -150,8 +155,7 @@
 
         { entities: model-entities, relationships: model-relationships } = parse-model model-filepath
 
-        concat entities, model-entities
-        concat relationships, model-relationships
+        entities `append` model-entities ; relationships `append` model-relationships
 
       { entities, relationships }
 

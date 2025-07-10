@@ -34,15 +34,26 @@
 
       lines |> lines-as-string
 
+    relationship-as-lines = ({ source-entity, source-field, target-entity, target-field })->
+
+      [ "#source-entity::#source-field -- #target-entity::#target-field" ]
+
     as-puml = (lines) -> <[ @startuml ]> ++ lines ++ <[ @enduml ]>
+
+    entities-as-lines = (entities) -> map entities, entity-as-lines
+
+    relationships-as-lines = (relationships) -> map relationships, relationship-as-lines
+
+    models-as-lines = ({ entities, relationships }) ->
+
+      (entities-as-lines entities) ++ (relationships-as-lines relationships)
 
     puml = (filepath) ->
 
       filepath
 
         |> parse-models
-        |> (.entities)
-        |> map _ , entity-as-lines |> as-puml
+        |> models-as-lines |> as-puml
         |> lines-as-string
 
         |> stdout
