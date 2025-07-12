@@ -5,15 +5,19 @@
     { map-array-items: map } = dependency 'unsafe.Array'
     { lines-as-string } = dependency 'unsafe.Text'
     { stdout, debug } = dependency 'os.shell.IO'
+    { round-brackets: parens, circumfix } = dependency 'unsafe.Circumfix'
 
     { value-as-string } = dependency 'reflection.Value'
+
+    pad = -> circumfix it, [ ' ' ]
 
     primary-key = (name) -> "#{ name } INTEGER PRIMARY KEY AUTOINCREMENT"
     foreign-key = (name) -> "#{ name } INTEGER NOT NULL"
 
     attribute = ({ name, type, not-null }) -> "#{ name } #{ type }#{ if not-null then ' NOT NULL' else '' }"
 
-    unique-constraint = (fields) -> "UNIQUE ( #{ fields.join ', ' } )"
+    unique-constraint = (fields) -> "UNIQUE #{ parens pad fields.join ', ' }"
+    check-constraint = (expression) -> "CHECK #{ parens pad expression }"
 
     entity-prefix = ({ name }) -> "CREATE TABLE #{ name } ("
     entity-suffix = ');'
@@ -31,6 +35,8 @@
       for attr in entity.attributes => sql.push attribute attr
 
       for unique in entity.unique => sql.push unique-constraint unique
+
+      for check in entity.checks => sql.push check-constraint check
 
       [ entity-prefix entity ] ++ (sql * ', ') ++ [ entity-suffix ] |> lines-as-string
 

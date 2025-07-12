@@ -2,7 +2,7 @@
   do ->
 
     { parse-models } = dependency 'Models'
-    { map-array-items: map } = dependency 'unsafe.Array'
+    { map-array-items: map, array-size } = dependency 'unsafe.Array'
     { lines-as-string } = dependency 'unsafe.Text'
     { stdout } = dependency 'os.shell.IO'
 
@@ -18,17 +18,29 @@
 
       lines = [] ; lines.push entity-prefix entity
 
-      if entity.pk isnt void => lines.push indent '* #{ entity.pk }', 2
+      if entity.pk isnt void => lines.push indent "* #{ entity.pk }", 2
 
-      lines.push '--'
+      if (array-size entity.fk) isnt 0
 
-      for fk in entity.fk => lines.push indent '* #fk', 2
+        lines.push '--'
 
-      lines.push '--'
+        for fk in entity.fk => lines.push indent '* #fk', 2
 
-      for attribute in entity.attributes
+      if (array-size entity.attributes) isnt 0
 
-        lines.push indent "#{ if attribute.not-null then '*' else '' }#{ attribute.name }", 2
+        lines.push '--'
+
+        for attribute in entity.attributes
+
+          lines.push indent "#{ if attribute.not-null then '*' else '' }#{ attribute.name }", 2
+
+      if (array-size entity.checks) isnt 0
+
+        lines.push '--'
+
+        for expression in entity.checks
+
+          lines.push indent "constraint #expression", 2
 
       lines.push entity-suffix
 

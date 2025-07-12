@@ -3,7 +3,7 @@
 
     { read-textfile } = dependency 'os.filesystem.TextFile'
     { string-as-lines } = dependency 'unsafe.Text'
-    { drop-array-items: drop, array-size, append-items: append } = dependency 'unsafe.Array'
+    { drop-array-items: drop, array-size, append-items: append, drop-first-array-items: drop-first } = dependency 'unsafe.Array'
     { trimmed-string } = dependency 'unsafe.Whitespace'
     { upper-case } = dependency 'unsafe.StringCase'
     { drop-last-string-chars, string-as-words } = dependency 'unsafe.String'
@@ -29,7 +29,7 @@
 
     textfile-lines = (filepath) -> filepath |> modelfile-found |> read-textfile |> string-as-lines |> drop _ , is-empty-line
 
-    new-entity = (name) -> { name, pk: void, unique: [], fk: [], attributes: [] }
+    new-entity = (name) -> { name, pk: void, unique: [], fk: [], attributes: [], checks: [] }
 
     new-relationship = (source-entity, source-field, target-entity, target-field) -> { source-entity, source-field, target-entity, target-field }
 
@@ -123,6 +123,15 @@
             field-names = words `drop-first` 1
 
             entity.unique.push field-names
+
+          | 'C' =>
+
+            model-error filepath, line, index, "Check constraints must specify an expression (e.g. 'C (column_name > 0)')" \
+              if words-count < 2
+
+            expression = words `drop-first` 1 |> (* ' ')
+
+            entity.checks.push expression
 
           | 'T', 'I', 'F', 'L', 'B', 'TS' =>
 
