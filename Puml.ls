@@ -5,10 +5,9 @@
     { map-array-items: map, array-size } = dependency 'unsafe.Array'
     { lines-as-string } = dependency 'unsafe.Text'
     { stdout } = dependency 'os.shell.IO'
+    { indent-string: indent } = dependency 'unsafe.String'
 
     { value-as-string } = dependency 'reflection.Value'
-
-    indent = (string, n) -> "#{ ' ' * n }#string"
 
     entity-prefix = ({ name }) -> "entity #name {"
 
@@ -18,13 +17,13 @@
 
       lines = [] ; lines.push entity-prefix entity
 
-      if entity.pk isnt void => lines.push indent "* #{ entity.pk }", 2
+      if entity.pk isnt void => lines.push indent "* #{ entity.pk }"
 
       if (array-size entity.fk) isnt 0
 
         lines.push '--'
 
-        for fk in entity.fk => lines.push indent '* #fk', 2
+        for fk in entity.fk => lines.push indent "* #fk"
 
       if (array-size entity.attributes) isnt 0
 
@@ -32,7 +31,7 @@
 
         for attribute in entity.attributes
 
-          lines.push indent "#{ if attribute.not-null then '*' else '' }#{ attribute.name }", 2
+          lines.push indent "#{ if attribute.not-null then '*' else '' }#{ attribute.name }"
 
       if (array-size entity.checks) isnt 0
 
@@ -40,7 +39,7 @@
 
         for expression in entity.checks
 
-          lines.push indent "constraint #expression", 2
+          lines.push indent "constraint #expression"
 
       lines.push entity-suffix
 

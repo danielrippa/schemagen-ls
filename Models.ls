@@ -111,7 +111,7 @@
 
             entity.fk.push name
 
-            relationship = new-relationship entity.name, name, foreign-entity-name, foreign-fielf-name
+            relationship = new-relationship entity.name, name, foreign-entity-name, foreign-field-name
 
             relationships.push relationship
 

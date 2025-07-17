@@ -3,7 +3,7 @@
 
     { parse-models } = dependency 'Models'
     { map-array-items: map } = dependency 'unsafe.Array'
-    { lines-as-string } = dependency 'unsafe.Text'
+    { lines-as-string, string-as-lines } = dependency 'unsafe.Text'
     { stdout, debug } = dependency 'os.shell.IO'
     { round-brackets: parens, circumfix } = dependency 'unsafe.Circumfix'
 
@@ -16,8 +16,8 @@
 
     attribute = ({ name, type, not-null }) -> "#{ name } #{ type }#{ if not-null then ' NOT NULL' else '' }"
 
-    unique-constraint = (fields) -> "UNIQUE #{ parens pad fields.join ', ' }"
-    check-constraint = (expression) -> "CHECK #{ parens pad expression }"
+    unique-constraint = (fields) -> "UNIQUE #{ parens fields.join ', ' }"
+    check-constraint = (expression) -> "CHECK #{ parens expression }"
 
     entity-prefix = ({ name }) -> "CREATE TABLE #{ name } ("
     entity-suffix = ');'
@@ -38,7 +38,9 @@
 
       for check in entity.checks => sql.push check-constraint check
 
-      [ entity-prefix entity ] ++ (sql * ', ') ++ [ entity-suffix ] |> lines-as-string
+      lines = sql |> map _ , (-> "  #it") |> (* ',\n')
+
+      [ entity-prefix entity ] ++ lines ++ [ entity-suffix ] |> lines-as-string
 
     sql = (filepath) ->
 
