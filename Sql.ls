@@ -12,7 +12,7 @@
     pad = -> circumfix it, [ ' ' ]
 
     primary-key = (name) -> "#{ name } INTEGER PRIMARY KEY AUTOINCREMENT"
-    foreign-key = (name) -> "#{ name } INTEGER NOT NULL"
+    foreign-key = ({ name, not-null }) -> "#{ name } INTEGER#{ if not-null then ' NOT NULL' else ''}"
 
     attribute = ({ name, type, not-null }) -> "#{ name } #{ type }#{ if not-null then ' NOT NULL' else '' }"
 

@@ -104,12 +104,17 @@
             name = words.1
             field = words.2
 
+            not-null = (name.index-of '!') isnt -1
+
+            if not-null 
+              name = name `drop-last-string-chars` 1
+
             model-error filepath, line, index, "Foreign key Field references must be specified as EntityName.FieldName" \
               if (field.index-of '.') is -1
 
             [ foreign-entity-name, foreign-field-name ] = field.split '.'
 
-            entity.fk.push name
+            entity.fk.push { name, not-null }
 
             relationship = new-relationship entity.name, name, foreign-entity-name, foreign-field-name
 
