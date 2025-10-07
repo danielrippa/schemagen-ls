@@ -1,21 +1,20 @@
 
   do ->
 
-    { read-textfile } = dependency 'os.filesystem.TextFile'
-    { string-as-lines } = dependency 'unsafe.Text'
-    { drop-array-items: drop, array-size, append-items: append, drop-first-array-items: drop-first } = dependency 'unsafe.Array'
-    { trimmed-string } = dependency 'unsafe.Whitespace'
-    { upper-case } = dependency 'unsafe.StringCase'
-    { drop-last-string-chars, string-as-words } = dependency 'unsafe.String'
+    { create-error-context } = dependency 'prelude.error.Context'
+    { trim-space } = dependency 'value.string.Whitespace'
+    { string-as-lines, string-as-words } = dependency 'value.string.Text'
+    { read-textfile-lines } = dependency 'os.filesystem.TextFile'
+    { array-size, drop-array-items: drop, drop-first-array-items: drop-first, append-items: append } = dependency 'value.Array'
+    { string-interval-before } = dependency 'value.string.Segment'
     { file-exists } = dependency 'os.filesystem.File'
-    { result-or-error } = dependency 'flow.Conditional'
+    { upper-case } = dependency 'value.string.Case'
 
-    { debug } = dependency 'os.shell.IO'
-    { value-as-string } = dependency 'reflection.Value'
+    { create-error } = create-error-context 'Schemagen.Models'
 
-    is-empty-line = (line) -> line |> trimmed-string |> -> it is ''
+    is-empty-line = (line) -> line |> trim-space |> -> it is ''
 
-    model-error = (filepath, line, index, message) -> throw new Error do
+    model-error = (filepath, line, index, message) -> throw create-error do
 
       * "Error in model file '#filepath' at line ##{ line }."
         "Line: '#line'"
@@ -25,9 +24,9 @@
 
     empty-file = -> if it is null then '' else it
 
-    modelfile-found = (filepath) -> throw new Error "SchemaList file '#filepath' not found" unless file-exists filepath ; filepath
+    modelfile-found = (filepath) -> throw create-error "SchemaList file '#filepath' not found" unless file-exists filepath ; filepath
 
-    textfile-lines = (filepath) -> filepath |> modelfile-found |> read-textfile |> string-as-lines |> drop _ , is-empty-line
+    textfile-lines = (filepath) -> filepath |> modelfile-found |> read-textfile-lines |> drop _ , is-empty-line
 
     new-entity = (name) -> { name, pk: void, unique: [], fk: [], attributes: [], checks: [] }
 
@@ -53,9 +52,7 @@
 
       not-null = (name.index-of '!') isnt -1
 
-      if not-null
-
-        name = name `drop-last-string-chars` 1
+      if not-null => name = name `string-interval-before` 1
 
       { name, type, not-null }
 
@@ -68,7 +65,7 @@
 
       for line, index in textfile-lines filepath
 
-        words = string-as-words trimmed-string line ; words-count = array-size words ; keyword = upper-case words.0
+        words = string-as-words trim-space line ; words-count = array-size words ; keyword = upper-case words.0
 
         switch keyword
 
@@ -107,7 +104,7 @@
             not-null = (name.index-of '!') isnt -1
 
             if not-null 
-              name = name `drop-last-string-chars` 1
+              name = name `string-interval-before` 1
 
             model-error filepath, line, index, "Foreign key Field references must be specified as EntityName.FieldName" \
               if (field.index-of '.') is -1
@@ -154,18 +151,15 @@
 
             model-error filepath, line, index, "Invalid statement '#line'"
 
-      if entity isnt void
-        entities.push entity
+      if entity isnt void => entities.push entity
 
       { entities, relationships }
 
-    get-filepaths = (filepath) -> texfile-lines filepath
-
-    parse-models = (filepath) ->
+    parse-models = (filepaths) ->
 
       entities = [] ; relationships = []
 
-      for model-filepath in textfile-lines filepath
+      for model-filepath in filepaths
 
         { entities: model-entities, relationships: model-relationships } = parse-model model-filepath
 

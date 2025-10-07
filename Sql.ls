@@ -1,13 +1,11 @@
 
   do ->
 
+    { map } = dependency 'prelude.Array'
+    { lines-as-string } = dependency 'value.string.Text'
+    { stdout } = dependency 'os.shell.IO'
+    { circumfix } = dependency 'value.string.Brackets'
     { parse-models } = dependency 'Models'
-    { map-array-items: map } = dependency 'unsafe.Array'
-    { lines-as-string, string-as-lines } = dependency 'unsafe.Text'
-    { stdout, debug } = dependency 'os.shell.IO'
-    { round-brackets: parens, circumfix } = dependency 'unsafe.Circumfix'
-
-    { value-as-string } = dependency 'reflection.Value'
 
     pad = -> circumfix it, [ ' ' ]
 
@@ -42,9 +40,9 @@
 
       [ entity-prefix entity ] ++ lines ++ [ entity-suffix ] |> lines-as-string
 
-    sql = (filepath) ->
+    sql = (filepaths) ->
 
-      filepath
+      filepaths
 
         |> parse-models |> (.entities)
         |> map _ , entity-as-lines

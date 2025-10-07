@@ -1,13 +1,14 @@
 
   do ->
 
+    { create-error-context } = dependency 'prelude.error.Context'
     { parse-models } = dependency 'Models'
-    { map-array-items: map, array-size } = dependency 'unsafe.Array'
-    { lines-as-string } = dependency 'unsafe.Text'
+    { lines-as-string } = dependency 'value.string.Text'
     { stdout } = dependency 'os.shell.IO'
-    { indent-string: indent } = dependency 'unsafe.String'
+    { array-size, map-array-items: map } = dependency 'value.Array'
+    { indent-string: indent } = dependency 'value.String'
 
-    { value-as-string } = dependency 'reflection.Value'
+    { argtype } = create-error-context 'Schemagen.Puml'
 
     entity-prefix = ({ name }) -> "entity #name {"
 
@@ -45,28 +46,29 @@
 
       lines |> lines-as-string
 
-    relationship-as-lines = ({ source-entity, source-field, target-entity, target-field })->
+    #
 
-      [ "#source-entity::#source-field -- #target-entity::#target-field" ]
-
-    as-puml = (lines) -> <[ @startuml ]> ++ lines ++ <[ @enduml ]>
+    relationship-as-lines = ({ source-entity, source-field, target-entity, target-field })-> [ "#source-entity::#source-field -- #target-entity::#target-field" ]
 
     entities-as-lines = (entities) -> map entities, entity-as-lines
 
     relationships-as-lines = (relationships) -> map relationships, relationship-as-lines
 
-    models-as-lines = ({ entities, relationships }) ->
+    #
 
-      (entities-as-lines entities) ++ (relationships-as-lines relationships)
+    models-as-lines = ({ entities, relationships }) -> (entities-as-lines entities) ++ (relationships-as-lines relationships)
 
-    puml = (filepath) ->
+    as-puml = (lines) -> <[ @startuml ]> ++ lines ++ <[ @enduml ]>
 
-      filepath
+    #
+
+    puml = (filepaths) ->
+
+      filepaths
 
         |> parse-models
         |> models-as-lines |> as-puml
         |> lines-as-string
-
         |> stdout
 
     {
