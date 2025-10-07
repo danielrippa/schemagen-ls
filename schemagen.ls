@@ -4,14 +4,15 @@
   { stdout-lines, stderr-lines } = dependency 'os.shell.IO'
   { sql } = dependency 'Sql'
   { puml } = dependency 'Puml'
+  { help } = dependency 'Help'
 
   { value-as-string } = dependency 'prelude.reflection.Value'
 
-  usage = -> script-usage [ 'sql|puml schema-filepath...' ]
+  usage = -> script-usage [ 'sql|puml|help schema-filepath...' ]
 
   #
 
-  if argc < 2 => stdout-lines usage! ; exit 1
+  if argc < 1 => stdout-lines usage! ; exit 1
 
   [ command, ...filepaths ] = argv
 
@@ -19,6 +20,7 @@
 
     | 'sql' => sql filepaths
     | 'puml' => puml filepaths
+    | 'help' => help!
 
     else stderr-lines usage! ++ [ '', "Unknown command '#command'." ] ; exit 2
 
