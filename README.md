@@ -8,14 +8,22 @@
 schemagen <command> <input_file>
 ```
 
--   `<command>`: The output format. Can be `sql` or `puml`.
+-   `<command>`: The output format. Can be `sql`, `puml`, or `help`.
 -   `<input_file>`: The path to the schema definition file.
 
 ### Examples
 
 ```bash
 schemagen sql my_schema.schema > my_schema.sql
+```
+
+```bash
 schemagen puml my_schema.schema > my_schema.puml
+```
+
+```bash
+schemagen help
+```
 ```
 
 ## Syntax
@@ -185,4 +193,3 @@ entity Post {
 User::AuthorId -- Post::PostId
 @enduml
 ```
-
