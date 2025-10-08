@@ -24,7 +24,6 @@ schemagen puml my_schema.schema > my_schema.puml
 ```bash
 schemagen help
 ```
-```
 
 ## Syntax
 
