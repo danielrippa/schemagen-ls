@@ -3,13 +3,13 @@
 
     { create-error-context } = dependency 'prelude.error.Context'
     { trim-space } = dependency 'value.string.Whitespace'
-    { string-as-lines, string-as-words } = dependency 'value.string.Text'
-    { read-textfile-lines } = dependency 'os.filesystem.TextFile'
+    { string-as-lines, lines-as-string, string-as-words } = dependency 'value.string.Text'
+    { try-read-textfile-lines } = dependency 'os.filesystem.TextFile'
     { array-size, drop-array-items: drop, drop-first-array-items: drop-first, append-items: append } = dependency 'value.Array'
     { string-interval-before } = dependency 'value.string.Segment'
     { file-exists } = dependency 'os.filesystem.File'
     { upper-case } = dependency 'value.string.Case'
-    { stderr } = dependency 'os.shell.IO'
+    { stderr-lf } = dependency 'os.shell.IO'
     { exit } = dependency 'os.shell.Script'
 
     { create-error } = create-error-context 'Schemagen.Models'
@@ -22,13 +22,9 @@
         "Line: '#line'"
         message
 
-      |> string-as-lines
+      |> lines-as-string
 
     empty-file = -> if it is null then '' else it
-
-    modelfile-found = (filepath) -> throw create-error "SchemaList file '#filepath' not found" unless file-exists filepath ; filepath
-
-    textfile-lines = (filepath) -> filepath |> modelfile-found |> read-textfile-lines |> drop _ , is-empty-line
 
     new-entity = (name) -> { name, pk: void, unique: [], fk: [], attributes: [], checks: [] }
 
@@ -54,7 +50,7 @@
 
       not-null = (name.index-of '!') isnt -1
 
-      if not-null => name = name `string-interval-before` 1
+      if not-null => name = name.slice 0, -1
 
       { name, type, not-null }
 
@@ -62,12 +58,17 @@
 
       entity = void ; entities = [] ; relationships = []
 
-      throw new Error "Model file '#filepath' not found" \
+      throw create-error "Model file '#filepath' not found" \
         unless file-exists filepath
 
-      for line, index in textfile-lines filepath
+      { value: model-lines, error } = try-read-textfile-lines filepath
+      throw contextualized error unless error is void
 
-        words = string-as-words trim-space line ; words-count = array-size words ; keyword = upper-case words.0
+      for model-line, index in model-lines
+
+        line = trim-space model-line ; continue if line is ''
+
+        words = string-as-words line ; words-count = array-size words ; keyword = upper-case words.0
 
         switch keyword
 
@@ -163,8 +164,10 @@
 
       for model-filepath in filepaths
 
+        model = parse-model model-filepath
+
         try model = parse-model model-filepath
-        catch error => stderr "#error" ; exit 1
+        catch error => (for k,v of error => stderr-lf "#k: #v") ; exit 1
 
         { entities: model-entities, relationships: model-relationships } = model
 
