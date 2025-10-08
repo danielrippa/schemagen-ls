@@ -5,7 +5,7 @@
 ## Usage
 
 ```bash
-schemagen <command> <input_file>
+schemagen <command> <input_files>
 ```
 
 -   `<command>`: The output format. Can be `sql`, `puml`, or `help`.
@@ -14,11 +14,11 @@ schemagen <command> <input_file>
 ### Examples
 
 ```bash
-schemagen sql my_schema.schema > my_schema.sql
+schemagen sql my_schema.schema my_other_schema.schema > my_schema.sql
 ```
 
 ```bash
-schemagen puml my_schema.schema > my_schema.puml
+schemagen puml my_schema.schema my_other_schema.schema > my_schema.puml
 ```
 
 ```bash
@@ -102,28 +102,6 @@ Check constraints are defined with `C` followed by an expression.
   PK MyEntityId
   I MyField
   C (MyField > 0)
-```
-
-### Includes
-
-You can include other schema files by listing the file paths in a file.
-
-**`my_schema.schema`:**
-```
-my_entity.schema
-my_other_entity.schema
-```
-
-**`my_entity.schema`:**
-```
-* MyEntity
-  PK MyEntityId
-```
-
-**`my_other_entity.schema`:**
-```
-* MyOtherEntity
-  PK MyOtherEntityId
 ```
 
 ## Example
