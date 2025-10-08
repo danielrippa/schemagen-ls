@@ -9,12 +9,14 @@
     { string-interval-before } = dependency 'value.string.Segment'
     { file-exists } = dependency 'os.filesystem.File'
     { upper-case } = dependency 'value.string.Case'
+    { stderr } = dependency 'os.shell.IO'
+    { exit } = dependency 'os.shell.Script'
 
     { create-error } = create-error-context 'Schemagen.Models'
 
     is-empty-line = (line) -> line |> trim-space |> -> it is ''
 
-    model-error = (filepath, line, index, message) -> throw create-error do
+    model-error = (filepath, line, index, message) -> create-error do
 
       * "Error in model file '#filepath' at line ##{ line }."
         "Line: '#line'"
@@ -71,7 +73,7 @@
 
           | '*' =>
 
-            model-error filepath, line, index, "Entities must specify a name (e.g '* EntityName')" \
+            throw model-error filepath, line, index, "Entities must specify a name (e.g '* EntityName')" \
               if words-count < 2
 
             entities.push entity  \
@@ -83,19 +85,19 @@
 
           | 'PK' =>
 
-            model-error filepath, line, index, "Primary Keys must specify a name (e.g. 'PK PrimaryKeyName')" \
+            throw model-error filepath, line, index, "Primary Keys must specify a name (e.g. 'PK PrimaryKeyName')" \
               if words-count < 2
 
             name = words.1
 
-            model-error filepath, line, index, "Entity already has PK #{ entity.pk }" \
+            throw model-error filepath, line, index, "Entity already has PK #{ entity.pk }" \
               if entity.pk isnt void
 
             entity.pk = name
 
           | 'FK' =>
 
-            model-error filepath, line, index, "Foreign keys must specify both a Name and a Field reference (e.g. 'FK ForeignName EntityName.FieldName')" \
+            throw model-error filepath, line, index, "Foreign keys must specify both a Name and a Field reference (e.g. 'FK ForeignName EntityName.FieldName')" \
               if words-count < 3
 
             name = words.1
@@ -106,7 +108,7 @@
             if not-null 
               name = name `string-interval-before` 1
 
-            model-error filepath, line, index, "Foreign key Field references must be specified as EntityName.FieldName" \
+            throw model-error filepath, line, index, "Foreign key Field references must be specified as EntityName.FieldName" \
               if (field.index-of '.') is -1
 
             [ foreign-entity-name, foreign-field-name ] = field.split '.'
@@ -119,7 +121,7 @@
 
           | 'U' =>
 
-            model-error filepath, line, index, "Unique constraints must specify a list of fields (e.g. 'U FieldName1 FieldName2')" \
+            throw model-error filepath, line, index, "Unique constraints must specify a list of fields (e.g. 'U FieldName1 FieldName2')" \
               if words-count < 1
 
             field-names = words `drop-first` 1
@@ -128,7 +130,7 @@
 
           | 'C' =>
 
-            model-error filepath, line, index, "Check constraints must specify an expression (e.g. 'C (column_name > 0)')" \
+            throw model-error filepath, line, index, "Check constraints must specify an expression (e.g. 'C (column_name > 0)')" \
               if words-count < 2
 
             expression = words `drop-first` 1 |> (* ' ')
@@ -137,19 +139,19 @@
 
           | 'T', 'I', 'F', 'L', 'B', 'TS' =>
 
-            model-error filepath, line, index, "Attributes must specify a Name (e.g. #that AttributeName)" \
+            throw model-error filepath, line, index, "Attributes must specify a Name (e.g. #that AttributeName)" \
               if words-count < 2
 
             attribute = attribute-from-words words
 
-            model-error filepath, line, index, "Invalid attribute type '#{ words.0 }'" \
+            throw model-error filepath, line, index, "Invalid attribute type '#{ words.0 }'" \
               if attribute is void
 
             entity.attributes.push attribute
 
           else
 
-            model-error filepath, line, index, "Invalid statement '#line'"
+            throw model-error filepath, line, index, "Invalid statement '#line'"
 
       if entity isnt void => entities.push entity
 
@@ -161,7 +163,10 @@
 
       for model-filepath in filepaths
 
-        { entities: model-entities, relationships: model-relationships } = parse-model model-filepath
+        try model = parse-model model-filepath
+        catch error => stderr "#error" ; exit 1
+
+        { entities: model-entities, relationships: model-relationships } = model
 
         entities `append` model-entities ; relationships `append` model-relationships
 
