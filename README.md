@@ -67,7 +67,7 @@ Attributes are defined with a type code, a name, and an optional `!` for `NOT NU
 | `F`  | `REAL`                                 |
 | `L`  | `BOOLEAN`                              |
 | `B`  | `BLOB`                                 |
-| `TS` | `DATETIME DEFAULT current_timestamp` |
+| `TS` | `DATETIME DEFAULT current_timestamp`   |
 
 ### Foreign Keys
 
