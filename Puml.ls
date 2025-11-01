@@ -8,6 +8,8 @@
     { array-size, map-array-items: map } = dependency 'value.Array'
     { indent-string: indent } = dependency 'value.String'
 
+    { value-as-string } = dependency 'prelude.reflection.Value'
+
     { argtype } = create-error-context 'Schemagen.Puml'
 
     entity-prefix = ({ name }) -> "entity #name {"
@@ -15,6 +17,8 @@
     entity-suffix = '}'
 
     entity-as-lines = (entity) ->
+
+      WScript.Echo value-as-string entity
 
       lines = [] ; lines.push entity-prefix entity
 
@@ -24,7 +28,7 @@
 
         lines.push '--'
 
-        for fk in entity.fk => lines.push indent "* #fk"
+        for fk in entity.fk => lines.push indent "* #{ fk.name }"
 
       if (array-size entity.attributes) isnt 0
 
